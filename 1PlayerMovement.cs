@@ -39,12 +39,16 @@ public class PlayerMovement : MonoBehaviour
             transform.localScale = new Vector3(-16, 16, 1);
 
         //jump
-        if (Input.GetKey(KeyCode.Space) && grounded)
+        if (Input.GetKeyDown(KeyCode.Space) && grounded)
             Jump();
 
         //Set animator parameters
         animator.SetBool("flying", HorizontalInput != 0); 
         animator.SetBool("grounded", grounded);
+
+        //Fallbeschleunigung, falls Space nicht mehr gedrückt wird.
+        if (grounded == false && !Input.GetKey(KeyCode.Space))
+            rb.AddForce(new Vector2(0, -100));
 
     }
 
