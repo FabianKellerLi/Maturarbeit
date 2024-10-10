@@ -46,7 +46,7 @@ public class PlayerMovement : MonoBehaviour
         animator.SetBool("flying", HorizontalInput != 0); 
         animator.SetBool("grounded", grounded);
 
-        //Fallbeschleunigung, falls Space nicht mehr gedrückt wird.
+        //Fallbeschleunigung, falls Space nicht mehr gedrückt wird. 
         if (grounded == false && !Input.GetKey(KeyCode.Space))
             rb.AddForce(new Vector2(0, -100));
 
