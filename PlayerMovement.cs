@@ -4,13 +4,19 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
-    public Rigidbody2D rb;
-    public float speedX = 300;
-    public float speedY = 10;
-    public Animator animator;
-    public bool grounded;
-    public float gravityIncrease = -20;
+    private Rigidbody2D rb;
+    [SerializeField] public float speedX = 400;
+    [SerializeField] public float speedY = 15;
+    private Animator animator;
+    public float gravityIncrease = -5;
     Vector2 move;
+    private BoxCollider2D boxCollider;
+    public float RaycastBoxDistanceDown = 0.2f;
+    [SerializeField] private LayerMask groundLayer;
+    [SerializeField] private LayerMask wallLayer;
+    private bool isWallSliding;
+    public float wallSlidingSpeed = 0.2f;
+
 
 
     // Start is called before the first frame update
@@ -18,6 +24,7 @@ public class PlayerMovement : MonoBehaviour
     {
         rb = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
+        boxCollider = GetComponent<BoxCollider2D>();
     }
 
     private void FixedUpdate()
@@ -39,17 +46,18 @@ public class PlayerMovement : MonoBehaviour
             transform.localScale = new Vector3(-16, 16, 1);
 
         //jump
-        if (Input.GetKeyDown(KeyCode.Space) && grounded)
+        if (Input.GetKeyDown(KeyCode.Space) && isGrounded())
             Jump();
 
         //Set animator parameters
         animator.SetBool("flying", HorizontalInput != 0); 
-        animator.SetBool("grounded", grounded);
+        animator.SetBool("grounded", isGrounded());
 
-        //Fallbeschleunigung, falls Space nicht mehr gedrückt wird. 123
-        if (grounded == false && !Input.GetKey(KeyCode.Space))
+        //Fallbeschleunigung, falls Space nicht mehr gedrückt wird
+        if (isGrounded() == false && !Input.GetKey(KeyCode.Space))
             rb.AddForce(new Vector2(0, gravityIncrease));
 
+        wallSlide();
     }
 
 
@@ -57,12 +65,40 @@ public class PlayerMovement : MonoBehaviour
     {
         rb.velocity = new Vector2(rb.velocity.x, speedY);
         animator.SetTrigger("jump");
-        grounded = false;
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (collision.gameObject.tag == "Ground")
-            grounded = true;
+       
     }
+
+
+    private bool isGrounded()
+    {
+        RaycastHit2D raycastHit = Physics2D.BoxCast(boxCollider.bounds.center, boxCollider.bounds.size, 0, Vector2.down, RaycastBoxDistanceDown, groundLayer);
+           return raycastHit.collider != null;
+    
+    }
+
+    private bool onWall()
+    {
+        RaycastHit2D raycastHit = Physics2D.BoxCast(boxCollider.bounds.center, boxCollider.bounds.size, 0, new Vector2(transform.localScale.x, 0), RaycastBoxDistanceDown, wallLayer);
+        return raycastHit.collider != null;
+    
+    }
+
+    private void wallSlide()
+    {
+        if (onWall() && !isGrounded())
+        {
+            isWallSliding = true;
+            rb.velocity = new Vector2(rb.velocity.x, Mathf.Clamp(rb.velocity.y, -wallSlidingSpeed, float.MaxValue));
+        }
+        else
+        {
+            isWallSliding = false;
+        }
+    }
+
+
 }
