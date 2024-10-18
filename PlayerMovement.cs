@@ -5,13 +5,13 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour
 {
     private Rigidbody2D rb;
-    [SerializeField] public float speedX = 800;
-    [SerializeField] public float speedY = 15;
     private Animator animator;
-    public float gravityIncrease = -5;
-    Vector2 move;
     private BoxCollider2D boxCollider;
-    public float RaycastBoxDistanceDown = 0.2f;
+    [SerializeField] private float speedX = 800;
+    [SerializeField] private float speedY = 15;
+    [SerializeField] private float gravityIncrease = -5;
+    [SerializeField] private float RaycastBoxDistanceDown = 0.2f;
+    Vector2 move;
     
     //Layers
     [SerializeField] private LayerMask groundLayer;
@@ -19,13 +19,13 @@ public class PlayerMovement : MonoBehaviour
     
     //Wallslide
     private bool isWallSliding;
-    public float wallSlidingSpeed = 0.2f;
+    [SerializeField] private float wallSlidingSpeed = 0.2f;
     
     //Walljump
     private bool isWallJumping = false;
     private float wallJumpingDirection;
-    private float wallJumpingDuration = 0.1f;
-    private float wallJupmingTime = 0.2f;
+    [SerializeField] private float wallJumpingDuration = 0.1f;
+    [SerializeField] private float wallJupmingTime = 0.2f;
     private float wallJumpingCounter;
     private Vector2 wallJumpingPower = new Vector2(20, 15);
 
@@ -52,7 +52,9 @@ public class PlayerMovement : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        print(-rb.transform.localScale.x);
+        //test
+        //print(-rb.transform.localScale.x);
+        print(wallJumpingDirection);
 
         
 
@@ -69,7 +71,7 @@ public class PlayerMovement : MonoBehaviour
         //jump
         if (Input.GetKeyDown(KeyCode.Space) && isGrounded())
         {
-            Jump();
+            jump();
         }
           
 
@@ -85,26 +87,15 @@ public class PlayerMovement : MonoBehaviour
         }
 
         wallSlide();
-
-        //Walljump
-        if (Input.GetKeyDown(KeyCode.Space) && onWall() && !isGrounded())
-        {
-            wallJump();
-        }
-
-
+        
+        wallJump();
     }
 
 
-    private void Jump()
+    private void jump()
     {
         rb.velocity = new Vector2(rb.velocity.x, speedY);
         animator.SetTrigger("jump");
-    }
-
-    private void OnCollisionEnter2D(Collision2D collision)
-    {
-       
     }
 
 
@@ -126,12 +117,7 @@ public class PlayerMovement : MonoBehaviour
     {
         if (onWall() && !isGrounded() && Input.GetAxisRaw("Horizontal") == Mathf.Sign(transform.localScale.x))
         {
-            isWallSliding = true;
             rb.velocity = new Vector2(rb.velocity.x, Mathf.Clamp(rb.velocity.y, -wallSlidingSpeed, float.MaxValue));
-        }
-        else
-        {
-            isWallSliding = false;
         }
     }
 
@@ -151,7 +137,7 @@ public class PlayerMovement : MonoBehaviour
             wallJumpingCounter -= Time.deltaTime;
         }
 
-        if(Input.GetKeyDown(KeyCode.Space) && wallJumpingCounter > 0)
+        if(Input.GetKeyDown(KeyCode.Space) && wallJumpingCounter > 0 && !isGrounded())
         {
             isWallJumping = true;
             rb.velocity = new Vector2(wallJumpingDirection * wallJumpingPower.x, wallJumpingPower.y);
@@ -164,5 +150,18 @@ public class PlayerMovement : MonoBehaviour
     private void stopWallJump()
     {
         isWallJumping = false;
+    }
+
+    public bool canAttack()
+    {
+        if (!onWall())
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+            
     }
 }
