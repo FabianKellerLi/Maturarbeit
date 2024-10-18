@@ -54,7 +54,7 @@ public class PlayerMovement : MonoBehaviour
     {
         //test
         //print(-rb.transform.localScale.x);
-        print(wallJumpingDirection);
+        //print(wallJumpingDirection);
 
         
 

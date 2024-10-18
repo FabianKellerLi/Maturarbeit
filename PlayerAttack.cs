@@ -12,6 +12,8 @@ public class PlayerAttack : MonoBehaviour
     public LayerMask enemyLayer;
     public Transform attackCornerOne;
     public Transform attackCornerTwo;
+    public int attackDamage = 20;
+
 
     // Start is called before the first frame update
     void Start()
@@ -45,7 +47,8 @@ public class PlayerAttack : MonoBehaviour
         //Damage the Enemies
         foreach(Collider2D enemy in hitEnemies)
         {
-            print("hit");       
+            enemy.GetComponent<Enemy>().TakeDamage(attackDamage);
+            print("hit");
         }
     }
 }
