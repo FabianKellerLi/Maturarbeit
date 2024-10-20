@@ -26,6 +26,7 @@ public class PlayerAttack : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        //Quelle-https://www.youtube.com/watch?v=sPiVz1k-fEs
         if (Input.GetKeyDown(KeyCode.E) && cooldownTimer > attackCooldown && playerMovement.canAttack())
         {
             attack();
@@ -34,8 +35,11 @@ public class PlayerAttack : MonoBehaviour
         cooldownTimer += Time.deltaTime;
     }
 
+
+    //Quelle-https://www.youtube.com/watch?v=sPiVz1k-fEs
     private void attack()
     {
+
         //Cooldown
         cooldownTimer = 0;
 

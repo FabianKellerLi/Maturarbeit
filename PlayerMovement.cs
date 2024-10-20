@@ -9,9 +9,10 @@ public class PlayerMovement : MonoBehaviour
     private BoxCollider2D boxCollider;
     [SerializeField] private float speedX = 800;
     [SerializeField] private float speedY = 15;
-    [SerializeField] private float gravityIncrease = -5;
+    [SerializeField] private float gravityIncrease = -10;
     [SerializeField] private float RaycastBoxDistanceDown = 0.2f;
     Vector2 move;
+    private float gravityScale;
     
     //Layers
     [SerializeField] private LayerMask groundLayer;
@@ -45,11 +46,14 @@ public class PlayerMovement : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
         boxCollider = GetComponent<BoxCollider2D>();
+
+        gravityScale = rb.gravityScale;
     }
 
     private void FixedUpdate()
     {
-        if (!isWallJumping!) //!isDashing
+        //Quelle-https://www.youtube.com/watch?v=TcranVQUQ5U
+        if (!isWallJumping && !isDashing)
         {
             rb.velocity = new Vector2(move.x * speedX * Time.deltaTime, rb.velocity.y);
         }
@@ -69,14 +73,17 @@ public class PlayerMovement : MonoBehaviour
 
         move = new Vector2(HorizontalInput, Input.GetAxisRaw("Vertical"));
 
-        //Character sprite flip when moving  left/right
-        if (HorizontalInput > 0.01f)
-            transform.localScale = Vector3.one * 16;
-        else if (HorizontalInput < -0.01f)
-            transform.localScale = new Vector3(-16, 16, 1);
+        //Character sprite flip when moving  left/right Quelle-https://www.youtube.com/watch?v=TcranVQUQ5U
+        if (!isDashing)
+        {
+            if (HorizontalInput > 0.01f)
+                transform.localScale = Vector2.one * 16;
+            else if (HorizontalInput < -0.01f)
+                transform.localScale = new Vector2(-16, 16);
+        }
 
         //jump
-        if (Input.GetKeyDown(KeyCode.Space) && isGrounded())
+        if (Input.GetKeyDown(KeyCode.Space) && isGrounded() && !isDashing)
         {
             jump();
         }
@@ -88,12 +95,14 @@ public class PlayerMovement : MonoBehaviour
 
 
         //Fallbeschleunigung, falls Space nicht mehr gedrückt wird
-        if (isGrounded() == false && !Input.GetKey(KeyCode.Space) && !onWall() && !isWallJumping)
+        if(isGrounded() == false && !Input.GetKey(KeyCode.Space) && !onWall() && !isWallJumping && !isDashing)
+        
+        // beeinflusst dash falls Player am fallen ist (gI muss negativ sein)
         {
-            rb.AddForce(new Vector2(0 , gravityIncrease));
+            rb.AddForce(new Vector2(0, gravityIncrease));
+            //rb.gravityScale = gravityIncrease (gravityIncrease muss positiv sein);
         }
-
-        wallSlide();
+    wallSlide();
 
 
         //Walljump
@@ -112,6 +121,7 @@ public class PlayerMovement : MonoBehaviour
     }
 
 
+    //Quelle-https://www.youtube.com/watch?v=TcranVQUQ5U
     private void jump()
     {
         rb.velocity = new Vector2(rb.velocity.x, speedY);
@@ -119,6 +129,7 @@ public class PlayerMovement : MonoBehaviour
     }
 
 
+    //Quelle-https://www.youtube.com/watch?v=_UBpkdKlJzE&list=PLgOEwFbvGm5o8hayFB6skAfa8Z-mw4dPV&index=3
     private bool isGrounded()
     {
         RaycastHit2D raycastHit = Physics2D.BoxCast(boxCollider.bounds.center, boxCollider.bounds.size, 0, Vector2.down, RaycastBoxDistanceDown, groundLayer);
@@ -126,6 +137,7 @@ public class PlayerMovement : MonoBehaviour
     
     }
 
+    //Quelle-https://www.youtube.com/watch?v=_UBpkdKlJzE&list=PLgOEwFbvGm5o8hayFB6skAfa8Z-mw4dPV&index=3
     private bool onWall()
     {
         RaycastHit2D raycastHit = Physics2D.BoxCast(boxCollider.bounds.center, boxCollider.bounds.size, 0, new Vector2(transform.localScale.x, 0), RaycastBoxDistanceDown, wallLayer);
@@ -133,6 +145,7 @@ public class PlayerMovement : MonoBehaviour
     
     }
 
+    //Quelle-https://www.youtube.com/watch?v=O6VX6Ro7EtA
     private void wallSlide()
     {
         if (onWall() && !isGrounded() && Input.GetAxisRaw("Horizontal") == Mathf.Sign(transform.localScale.x))
@@ -146,7 +159,8 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    
+
+    //Quelle-https://www.youtube.com/watch?v=O6VX6Ro7EtA
     private void wallJump()
     {
         if (onWall())
@@ -179,20 +193,35 @@ public class PlayerMovement : MonoBehaviour
 
     private void dash()
     {
-        if (Input.GetKeyDown(KeyCode.Q) && dashCooldownTimer > dashCooldown)
+        if (Input.GetKeyDown(KeyCode.Q) && dashCooldownTimer > dashCooldown && !onWall())
         {
             CancelInvoke(nameof(stopDash));
             isDashing = true;
             dashCooldownTimer = 0;
+            rb.gravityScale = 0;
             float dashDirection = Mathf.Sign(transform.localScale.x);
-            rb.velocity = new Vector2(dashDirection * dashSpeed, 0.01f);
+            rb.velocity = new Vector2(dashDirection * dashSpeed, 0f);
             Invoke(nameof(stopDash), dashDuration);
         }
-      
+        
+        if (Input.GetKeyDown(KeyCode.Q) && dashCooldownTimer > dashCooldown && onWall())
+        {
+            CancelInvoke(nameof(stopDash));
+            isDashing = true;
+            dashCooldownTimer = 0;
+            rb.gravityScale = 0;
+            float dashDirection = -Mathf.Sign(transform.localScale.x);
+            transform.localScale = new Vector2 (dashDirection * Mathf.Abs(transform.localScale.x), transform.localScale.y);
+            rb.velocity = new Vector2(dashDirection * dashSpeed, 0f);
+            Invoke(nameof(stopDash), dashDuration);
+        }
+
+
     }
 
     private void stopDash()
     {
+        rb.gravityScale = gravityScale;
         isDashing = false;
     }
 
