@@ -18,7 +18,7 @@ public class Enemy : MonoBehaviour
     {
     
     }
-
+    //Quelle-https://www.youtube.com/watch?v=sPiVz1k-fEs
     public void TakeDamage(int damage)
     {
         currentHp -= damage;
@@ -30,6 +30,7 @@ public class Enemy : MonoBehaviour
             Die();
         }
     }
+
     public void Die()
     {
         //animation
