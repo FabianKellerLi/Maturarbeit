@@ -25,9 +25,16 @@ public class PlayerMovement : MonoBehaviour
     private bool isWallJumping = false;
     private float wallJumpingDirection;
     [SerializeField] private float wallJumpingDuration = 0.1f;
-    [SerializeField] private float wallJupmingTime = 0.2f;
+    [SerializeField] private float wallJumpingTime = 0.2f;
     private float wallJumpingCounter;
     private Vector2 wallJumpingPower = new Vector2(20, 15);
+
+    //Dash
+    [SerializeField] private float dashSpeed = 10f;
+    [SerializeField] private float dashDuration = 0.5f;
+    [SerializeField] private float dashCooldown = 0.3f;
+    private float dashCooldownTimer = 10000;
+    private bool isDashing;
 
 
 
@@ -42,7 +49,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (!isWallJumping)
+        if (!isWallJumping!) //!isDashing
         {
             rb.velocity = new Vector2(move.x * speedX * Time.deltaTime, rb.velocity.y);
         }
@@ -55,8 +62,8 @@ public class PlayerMovement : MonoBehaviour
         //test
         //print(-rb.transform.localScale.x);
         //print(wallJumpingDirection);
-
-        
+        //print(wallJumpingCounter);
+       
 
         float HorizontalInput = Input.GetAxisRaw("Horizontal");
 
@@ -87,8 +94,21 @@ public class PlayerMovement : MonoBehaviour
         }
 
         wallSlide();
-        
+
+
+        //Walljump
+        if (Input.GetKeyDown(KeyCode.Space) && onWall() && !isGrounded())
+        {
         wallJump();
+        }
+        
+        //Dash cooldown
+        dashCooldownTimer += Time.deltaTime;
+
+        
+        
+        dash();
+        
     }
 
 
@@ -117,7 +137,12 @@ public class PlayerMovement : MonoBehaviour
     {
         if (onWall() && !isGrounded() && Input.GetAxisRaw("Horizontal") == Mathf.Sign(transform.localScale.x))
         {
+            isWallSliding = true;
             rb.velocity = new Vector2(rb.velocity.x, Mathf.Clamp(rb.velocity.y, -wallSlidingSpeed, float.MaxValue));
+        }
+        else
+        {
+            isWallSliding = false;
         }
     }
 
@@ -128,7 +153,7 @@ public class PlayerMovement : MonoBehaviour
         {
             isWallJumping = false;
             wallJumpingDirection = -Mathf.Sign(transform.localScale.x);
-            wallJumpingCounter = wallJupmingTime;
+            wallJumpingCounter = wallJumpingTime;
 
             CancelInvoke(nameof(stopWallJump));
         }
@@ -137,7 +162,7 @@ public class PlayerMovement : MonoBehaviour
             wallJumpingCounter -= Time.deltaTime;
         }
 
-        if(Input.GetKeyDown(KeyCode.Space) && wallJumpingCounter > 0 && !isGrounded())
+        if(Input.GetKeyDown(KeyCode.Space) && wallJumpingCounter >= 0.01f)
         {
             isWallJumping = true;
             rb.velocity = new Vector2(wallJumpingDirection * wallJumpingPower.x, wallJumpingPower.y);
@@ -152,6 +177,25 @@ public class PlayerMovement : MonoBehaviour
         isWallJumping = false;
     }
 
+    private void dash()
+    {
+        if (Input.GetKeyDown(KeyCode.Q) && dashCooldownTimer > dashCooldown)
+        {
+            CancelInvoke(nameof(stopDash));
+            isDashing = true;
+            dashCooldownTimer = 0;
+            float dashDirection = Mathf.Sign(transform.localScale.x);
+            rb.velocity = new Vector2(dashDirection * dashSpeed, 0.01f);
+            Invoke(nameof(stopDash), dashDuration);
+        }
+      
+    }
+
+    private void stopDash()
+    {
+        isDashing = false;
+    }
+
     public bool canAttack()
     {
         if (!onWall())
@@ -162,6 +206,6 @@ public class PlayerMovement : MonoBehaviour
         {
             return false;
         }
-            
+        
     }
 }
